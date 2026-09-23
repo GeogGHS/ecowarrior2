@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>EcoWarriors: Hong Kong Climate Quest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    .heading-font { font-family: 'Fredoka', cursive; }
+    .glass-card {
+      background: rgba(6, 78, 59, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1.5px solid rgba(52, 211, 153, 0.3);
+    }
+    .glass-modal {
+      background: rgba(2, 44, 34, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 2px solid rgba(52, 211, 153, 0.45);
+    }
+    .dice-rolling {
+      animation: diceShake 0.6s infinite ease-in-out;
+    }
+    @keyframes diceShake {
+      0% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-16deg) scale(1.1); }
+      50% { transform: rotate(12deg) scale(0.94); }
+      75% { transform: rotate(-10deg) scale(1.06); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+    .pop-anim {
+      animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes modalPop {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .trophy-float {
+      animation: trophyFloat 2.4s infinite ease-in-out;
+    }
+    @keyframes trophyFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+      50% { transform: translateY(-12px) rotate(4deg) scale(1.05); }
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      opacity: 0.9;
+      animation: confettiFall 3s linear infinite;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(320px) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-emerald-950 via-teal-950 to-slate-950 text-slate-100 min-h-screen flex flex-col justify-between p-2 sm:p-4 overflow-x-hidden">
+
+  <!-- TOP HEADER -->
+  <header class="glass-card max-w-6xl mx-auto w-full rounded-2xl px-3 py-2.5 sm:px-5 sm:py-3 flex items-center justify-between shadow-xl mb-3 border border-emerald-500/20">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-2xl shadow-lg border border-emerald-300/40">
+        🌍
+      </div>
+      <div>
+        <h1 class="heading-font text-base sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-300 via-teal-200 to-yellow-200 bg-clip-text text-transparent">
+          EcoWarriors: Climate Quest
+        </h1>
+        <p class="text-[10px] sm:text-xs text-emerald-300/80 font-semibold hidden xs:block">
+          Primary 6 Geography Interactive Learning
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 sm:gap-3">
+      <button onclick="game.toggleBGM()" id="bgmBtn" class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-900/70 hover:bg-emerald-800 text-xs sm:text-sm font-bold border border-emerald-600/40 text-emerald-200 transition flex items-center gap-1 shadow-sm">
+        <span id="bgmIcon">🎵</span> <span id="bgmText" class="hidden sm:inline">Music: ON</span>
+      </button>
+      <button onclick="game.openRulesModal()" class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-900/70 hover:bg-emerald-800 text-xs sm:text-sm font-bold border border-emerald-600/40 text-emerald-200 transition flex items-center gap-1 shadow-sm">
+        <span>📖</span> <span class="hidden sm:inline">Rules</span>
+      </button>
+      <button onclick="game.openCharacterSelectionModal()" class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-emerald-950 text-xs sm:text-sm font-black shadow-md transition flex items-center gap-1">
+        <span>👗</span> <span>Character</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN INTERFACE -->
+  <main class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 items-stretch">
+    
+    <!-- LEFT SIDEBAR: ACTIVE HERO & CONTROLS -->
+    <aside class="lg:col-span-4 flex flex-col gap-3 order-2 lg:order-1">
+      
+      <!-- HERO STAT CARD -->
+      <div class="glass-card rounded-3xl p-4 shadow-xl border border-emerald-500/30">
+        <div class="flex items-center gap-3 mb-3">
+          <div id="activeAvatarBox" class="w-16 h-16 rounded-2xl flex items-center justify-center text-emerald-950 shadow-md bg-gradient-to-tr from-amber-400 to-yellow-500 overflow-hidden p-1 border-2 border-white/40">
+            <img id="activeAvatarImg" src="./Sunny.png" class="w-full h-full object-contain" alt="Sunny" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=Sunny'" />
+          </div>
+          <div>
+            <span class="text-[10px] font-bold tracking-wider text-emerald-400 uppercase">Selected Student</span>
+            <h2 id="activeAvatarName" class="heading-font text-xl font-bold text-yellow-300 leading-tight">Sunny</h2>
+            <p id="activeAvatarTitle" class="text-xs text-slate-300">Solar Power Eco-Warrior</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-emerald-950/70 p-2.5 rounded-xl border border-emerald-700/40 text-center">
+            <span class="text-[10px] text-emerald-300 block font-semibold">ECO SCORE</span>
+            <span id="headerScoreDisplay" class="heading-font text-2xl font-bold text-yellow-300">0 Marks</span>
+          </div>
+          <div class="bg-emerald-950/70 p-2.5 rounded-xl border border-emerald-700/40 text-center">
+            <span class="text-[10px] text-emerald-300 block font-semibold">POSITION</span>
+            <span id="badgeCurrentTile" class="heading-font text-2xl font-bold text-teal-300">Tile 1</span>
+          </div>
+          <div class="bg-emerald-950/70 p-2.5 rounded-xl border border-emerald-700/40 text-center">
+            <span class="text-[10px] text-emerald-300 block font-semibold">ACCURACY</span>
+            <span id="correctCounter" class="heading-font text-base sm:text-lg font-bold text-emerald-400">0 / 0</span>
+          </div>
+          <div class="bg-emerald-950/70 p-2.5 rounded-xl border border-emerald-700/40 text-center">
+            <span class="text-[10px] text-emerald-300 block font-semibold">DICE ROLLS</span>
+            <span id="rollsCounter" class="heading-font text-2xl font-bold text-sky-300">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DICE & ACTION SECTION -->
+      <div class="glass-card rounded-3xl p-4 shadow-xl border border-emerald-500/30 text-center flex flex-col justify-center flex-1">
+        <div class="mb-3">
+          <button id="rollDiceBtn" onclick="game.handleDiceRollClick()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 hover:from-emerald-300 hover:to-teal-200 text-emerald-950 font-black text-xl sm:text-2xl shadow-xl flex items-center justify-center gap-3 active:scale-95 transition">
+            <span id="diceFace" class="text-3xl sm:text-4xl"><i class="fa-solid fa-dice-three"></i></span>
+            <span>ROLL DICE</span>
+          </button>
+          <p id="actionPromptText" class="text-xs text-emerald-200 font-medium mt-2">
+            Tap the dice (rolls 1 to 3 steps) to advance!
+          </p>
+        </div>
+
+        <!-- ACTION LOG -->
+        <div class="bg-emerald-950/90 rounded-xl p-2.5 border border-emerald-800/60 text-left h-24 overflow-y-auto text-[11px] text-emerald-200 space-y-1" id="gameLog">
+          <p class="text-yellow-300 font-bold">✨ Welcome! Roll the dice to explore Hong Kong's climate solutions.</p>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: 25-TILE GAME CANVAS -->
+    <section class="lg:col-span-8 glass-card rounded-3xl p-3 sm:p-4 shadow-xl border border-emerald-500/30 flex flex-col items-center justify-center order-1 lg:order-2">
+      <div class="w-full relative flex items-center justify-center">
+        <canvas id="boardCanvas" width="600" height="600" class="w-full max-w-[540px] aspect-square rounded-2xl bg-emerald-950 shadow-2xl border-2 border-emerald-500/50"></canvas>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: CHARACTER SELECTION -->
+  <div id="characterModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-modal rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl pop-anim">
+      <div class="text-center mb-4">
+        <h3 class="heading-font text-2xl font-bold text-yellow-300">Choose Your Eco-Warrior!</h3>
+        <p class="text-xs text-emerald-200">Pick a student hero to explore climate actions in Hong Kong.</p>
+      </div>
+
+      <div id="characterSelectionGrid" class="grid grid-cols-2 gap-3 mb-5">
+        <!-- Rendered via JS -->
+      </div>
+
+      <button onclick="game.confirmCharacterSelection()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-black rounded-xl text-lg shadow-lg transition">
+        CONFIRM & PLAY
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: QUIZ QUESTION -->
+  <div id="questionModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-modal rounded-3xl p-5 sm:p-6 max-w-xl w-full shadow-2xl pop-anim border-2 border-teal-400">
+      <div class="flex items-center justify-between mb-3 border-b border-emerald-700/50 pb-2">
+        <span id="modalLevelBadge" class="px-3 py-1 bg-emerald-800 text-emerald-200 text-xs font-bold rounded-full">🟢 Easy Question</span>
+        <span id="modalMarksBadge" class="text-xs font-bold text-yellow-300">+100 Marks</span>
+      </div>
+
+      <h3 id="modalQuestionTitle" class="heading-font text-base sm:text-lg font-bold text-slate-100 mb-4 leading-snug">
+        Question Title
+      </h3>
+
+      <div id="modalOptionsContainer" class="flex flex-col gap-2.5 mb-4">
+        <!-- Injected via JS -->
+      </div>
+
+      <div id="modalFactBox" class="p-3 rounded-xl text-xs sm:text-sm font-semibold hidden mb-3"></div>
+
+      <button id="modalContinueBtn" onclick="game.closeQuestionModal()" class="w-full py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black rounded-xl text-base hidden transition">
+        CONTINUE ADVENTURE ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: ENHANCED VICTORY SCREEN -->
+  <div id="victoryModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-modal rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl pop-anim border-2 border-yellow-400 text-center relative overflow-hidden">
+      
+      <!-- Confetti Box -->
+      <div id="confettiBox" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+
+      <div class="w-24 h-24 mx-auto mb-3 bg-gradient-to-tr from-yellow-400 via-amber-300 to-yellow-500 rounded-full flex items-center justify-center text-5xl shadow-2xl trophy-float border-4 border-yellow-200">
+        🏆
+      </div>
+
+      <span id="vicRankBadge" class="inline-block px-3.5 py-1 bg-yellow-400 text-emerald-950 font-black text-xs rounded-full uppercase tracking-wider mb-2 shadow-md">
+        🌟 Master Eco-Warrior
+      </span>
+
+      <h2 class="heading-font text-2xl sm:text-3xl font-bold text-yellow-300 mb-1">Quest Completed!</h2>
+      <p class="text-xs sm:text-sm text-emerald-200 mb-4">You have mastered Hong Kong's Climate & Geography Quest!</p>
+
+      <div class="bg-emerald-950/80 p-4 rounded-2xl border border-emerald-600/40 mb-6 space-y-2.5 text-left">
+        <div class="flex justify-between items-center text-sm border-b border-emerald-800/60 pb-1.5">
+          <span class="text-emerald-300 font-semibold">Hero Used:</span>
+          <span id="vicHero" class="font-bold text-yellow-200">Sunny</span>
+        </div>
+        <div class="flex justify-between items-center text-sm border-b border-emerald-800/60 pb-1.5">
+          <span class="text-emerald-300 font-semibold">Final Eco Score:</span>
+          <span id="vicScore" class="heading-font text-xl font-bold text-yellow-300">0 Marks</span>
+        </div>
+        <div class="flex justify-between items-center text-sm border-b border-emerald-800/60 pb-1.5">
+          <span class="text-emerald-300 font-semibold">Questions Solved:</span>
+          <span id="vicQuestions" class="font-bold text-emerald-300">0 / 0 (100%)</span>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-emerald-300 font-semibold">Total Dice Rolls:</span>
+          <span id="vicRolls" class="font-bold text-sky-200">0 Rolls</span>
+        </div>
+      </div>
+
+      <button onclick="game.resetGame()" class="w-full py-3 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-emerald-950 font-black rounded-xl text-lg shadow-xl transition active:scale-95">
+        PLAY AGAIN 🔄
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: GAME RULES -->
+  <div id="rulesModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-modal rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl pop-anim border border-emerald-500">
+      <div class="flex items-center justify-between mb-3 border-b border-emerald-700/50 pb-2">
+        <h3 class="heading-font text-xl font-bold text-yellow-300">📖 How to Play</h3>
+        <button onclick="game.closeRulesModal()" class="text-emerald-300 hover:text-white font-bold text-lg">&times;</button>
+      </div>
+      <div class="text-xs sm:text-sm text-emerald-100 space-y-2.5 leading-relaxed">
+        <p>1. <strong>Roll the Dice:</strong> Tap the ROLL DICE button (1 to 3 steps) to navigate the 25-tile Hong Kong board.</p>
+        <p>2. <strong>Answer Unique Climate Questions:</strong> Questions never repeat during the same game session!</p>
+        <p>3. <strong>⭐ Bonus Tiles (Tiles 4, 9, 14, 19):</strong> Answering correctly on a Bonus tile grants <strong>+1 Extra Forward Step</strong>!</p>
+        <p>4. <strong>Goal:</strong> Reach Tile 25 with top accuracy to win the Master Trophy!</p>
+      </div>
+      <button onclick="game.closeRulesModal()" class="mt-4 w-full py-2.5 bg-emerald-500 text-emerald-950 font-bold rounded-xl shadow-md">GOT IT!</button>
+    </div>
+  </div>
+
+  <!-- COMPLETE GAME ENGINE SCRIPT -->
+  <script>
+    const CHARACTERS = [
+      {
+        id: 'sunny',
+        name: 'Sunny',
+        title: 'Solar Power Eco-Warrior',
+        color: '#f59e0b',
+        bgColor: 'from-amber-400 to-yellow-500',
+        badge: '☀️ Solar Power',
+        image: './Sunny.png'
+      },
+      {
+        id: 'renee',
+        name: 'Renee',
+        title: 'Recycling Champion',
+        color: '#10b981',
+        bgColor: 'from-emerald-400 to-teal-500',
+        badge: '♻️ Waste Sorting',
+        image: './Renee.png'
+      },
+      {
+        id: 'marina',
+        name: 'Marina',
+        title: 'Ocean & Water Guardian',
+        color: '#0284c7',
+        bgColor: 'from-sky-400 to-blue-600',
+        badge: '🌊 Clean Harbour',
+        image: './Marina.png'
+      },
+      {
+        id: 'flora',
+        name: 'Flora',
+        title: 'Nature & Forest Protector',
+        color: '#84cc16',
+        bgColor: 'from-lime-400 to-green-600',
+        badge: '🌿 Greenery',
+        image: './Flora.png'
+      }
+    ];
+
+    const ALL_QUESTIONS = [
+      {
+        id: 1,
+        level: "easy",
+        levelTitle: "🟢 Easy Question",
+        correctMarks: 100,
+        wrongMarks: 50,
+        question: "KMB Solar Buses: Many KMB double-decker buses have dark panels installed on their roofs. What is their main purpose?",
+        options: [
+          "A. Powering the bus headlights and horns",
+          "B. Capturing solar energy to power ventilation fans and reduce fuel use",
+          "C. Connecting passengers to free Wi-Fi"
+        ],
+        answer: 1,
+        fact: "Solar panels on bus roofs power the air ventilation system when the engine is off and reduce diesel consumption while driving."
+      },
+      {
+        id: 2,
+        level: "easy",
+        levelTitle: "🟢 Easy Question",
+        correctMarks: 100,
+        wrongMarks: 50,
+        question: "3-Colour Waste Sorting: In Hong Kong housing estates and schools, what items go into the Yellow recycling bin?",
+        options: [
+          "A. Waste Paper",
+          "B. Aluminium cans and metal tins",
+          "C. Plastic beverage bottles"
+        ],
+        answer: 1,
+        fact: "The 3-colour recycling system in Hong Kong uses Blue for Paper, Yellow for Metals (cans/tins), and Brown for Plastics."
+      },
+      {
+        id: 3,
+        level: "easy",
+        levelTitle: "🟢 Easy Question",
+        correctMarks: 100,
+        wrongMarks: 50,
+        question: "Energy Efficiency Labelling: When buying an electrical appliance in Hong Kong, which Energy Efficiency Label grade saves the most electricity?",
+        options: [
+          "A. Grade 1 (Green)",
+          "B. Grade 3 (Yellow)",
+          "C. Grade 5 (Red)"
+        ],
+        answer: 0,
+        fact: "Grade 1 appliances are the most energy-efficient on the market, consuming up to 40%+ less electricity than Grade 5 models."
+      },
+      {
+        id: 4,
+        level: "intermediate",
+        levelTitle: "🟡 Intermediate Question",
+        correctMarks: 200,
+        wrongMarks: 100,
+        question: "Community Recycling Network: What is the name of Hong Kong’s smart community recycling network where residents earn reward points (Green$ / 綠綠賞)?",
+        options: [
+          "A. MTR Points",
+          "B. GREEN@COMMUNITY (綠在區區)",
+          "C. HK Eco Net"
+        ],
+        answer: 1,
+        fact: "GREEN@COMMUNITY (綠在區區) provides recycling stations and smart recycling spots across Hong Kong, collecting 8 major recyclable types."
+      },
+      {
+        id: 5,
+        level: "intermediate",
+        levelTitle: "🟡 Intermediate Question",
+        correctMarks: 200,
+        wrongMarks: 100,
+        question: "Air Conditioning Temperature: During hot summer days in Hong Kong, what is the government's recommended indoor air-conditioner temperature range to balance comfort and energy saving?",
+        options: [
+          "A. 18°C – 20°C",
+          "B. 21°C – 23°C",
+          "C. 24°C – 26°C"
+        ],
+        answer: 2,
+        fact: "Maintaining room temperatures between 24°C and 26°C (ideally 25.5°C) saves substantial electricity, as each 1°C increase saves about 3% in energy."
+      },
+      {
+        id: 6,
+        level: "intermediate",
+        levelTitle: "🟡 Intermediate Question",
+        correctMarks: 200,
+        wrongMarks: 100,
+        question: "Urban Heat Island Effect: Due to the Urban Heat Island Effect, dense districts like Mong Kok are noticeably hotter than rural Sai Kung. What is the primary cause of this temperature difference?",
+        options: [
+          "A. Concrete buildings and asphalt roads trap heat with little wind ventilation",
+          "B. Urban areas have much higher elevations with thinner air",
+          "C. Rural areas experience less sunshine during the day"
+        ],
+        answer: 0,
+        fact: "Densely packed concrete high-rises and paved roads absorb and store solar radiation during the day and obstruct cooling sea breezes."
+      },
+      {
+        id: 7,
+        level: "hard",
+        levelTitle: "🔴 Hard Question",
+        correctMarks: 300,
+        wrongMarks: 150,
+        question: "Takeaway Dining Habits: When ordering takeout from a local Hong Kong restaurant, which habit best helps reduce plastic waste and carbon emissions?",
+        options: [
+          "A. Asking the staff for extra plastic cutlery sets just in case",
+          "B. Opting out of disposable tableware and using your own reusable container/utensils",
+          "C. Taking two extra plastic carrier bags to keep food warm"
+        ],
+        answer: 1,
+        fact: "Bringing your own reusable utensils and saying 'no' to single-use tableware significantly cuts plastic waste destined for landfills."
+      },
+      {
+        id: 8,
+        level: "hard",
+        levelTitle: "🔴 Hard Question",
+        correctMarks: 300,
+        wrongMarks: 150,
+        question: "Household Food Waste: Food waste accounts for about 30% of Hong Kong's municipal waste. How should households handle daily kitchen food scraps properly?",
+        options: [
+          "A. Flush food scraps down kitchen sinks and domestic drains",
+          "B. Separate food waste, drain excess liquid, and drop it into smart food waste bins (or make compost)",
+          "C. Mix all uneaten food directly into general trash bags for landfills"
+        ],
+        answer: 1,
+        fact: "Separating organic waste keeps it out of landfills—where decomposing wet food creates harmful greenhouse gases like methane (CH4)—and allows it to be converted into energy or compost."
+      },
+      {
+        id: 9,
+        level: "hard",
+        levelTitle: "🔴 Hard Question",
+        correctMarks: 300,
+        wrongMarks: 150,
+        question: "Electric Vehicles (EVs): Why is Hong Kong promoting the switch from petrol cars to Electric Vehicles (EVs)?",
+        options: [
+          "A. They do not emit smoky exhaust fumes on the road, helping make the air cleaner",
+          "B. They are much lighter in weight and take up less parking space",
+          "C. They can only be driven during daytime when the sun is out"
+        ],
+        answer: 0,
+        fact: "Electric vehicles produce zero roadside tailpipe emissions, which directly improves roadside air quality and reduces local emissions."
+      },
+      {
+        id: 10,
+        level: "hard",
+        levelTitle: "🔴 Hard Question",
+        correctMarks: 300,
+        wrongMarks: 150,
+        question: "HK Carbon Emissions Source: What is the largest source of carbon dioxide emissions in Hong Kong?",
+        options: [
+          "A. Electric cars traveling on highways",
+          "B. Farming and agricultural activities in the New Territories",
+          "C. Electricity generation by local power companies burning fossil fuels"
+        ],
+        answer: 2,
+        fact: "Over 60% of Hong Kong's carbon emissions originate from local power plants burning fossil fuels (primarily natural gas and coal) to generate electricity for the city."
+      }
+    ];
+
+    class EcoBoardGame {
+      constructor() {
+        this.totalTiles = 25;
+        this.currentTile = 1;
+        this.playerScore = 0;
+        this.solvedCount = 0;
+        this.attemptedCount = 0;
+        this.rollsCount = 0;
+        this.isMoving = false;
+        this.activeCharacter = CHARACTERS[0];
+        this.bgmPlaying = true;
+        this.bgmTimer = null;
+        this.pendingBonusStep = false;
+        this.currentActiveQuestion = null;
+
+        // Controlled Dice Pool (1 to 3 steps)
+        this.dicePool = [1, 1, 2, 2, 2, 3, 3];
+
+        this.canvas = document.getElementById('boardCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.characterImg = new Image();
+        this.characterImg.src = this.activeCharacter.image;
+
+        this.initAudio();
+        this.initQuestionDeck();
+        this.initCoordinates();
+        this.renderCharacterSelectionGrid();
+        this.updatePlayerUI();
+        this.drawBoard();
+        this.setupAudioAutounlock();
+      }
+
+      // Shuffled non-repeating question pool
+      initQuestionDeck() {
+        this.questionDeck = [...ALL_QUESTIONS];
+        for (let i = this.questionDeck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [this.questionDeck[i], this.questionDeck[j]] = [this.questionDeck[j], this.questionDeck[i]];
+        }
+        this.deckIndex = 0;
+      }
+
+      drawNextUniqueQuestion() {
+        if (this.deckIndex >= this.questionDeck.length) {
+          this.initQuestionDeck(); // Reshuffle only if all 10 questions are used
+        }
+        const q = this.questionDeck[this.deckIndex];
+        this.deckIndex++;
+        return q;
+      }
+
+      initAudio() {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          this.audioCtx = new AudioContextClass();
+        } catch (e) {
+          this.audioCtx = null;
+        }
+      }
+
+      setupAudioAutounlock() {
+        const unlock = () => {
+          if (this.audioCtx) {
+            if (this.audioCtx.state === 'suspended') {
+              this.audioCtx.resume();
+            }
+            if (this.bgmPlaying && !this.bgmTimer) {
+              this.startSoftBGM();
+            }
+          }
+          window.removeEventListener('click', unlock);
+          window.removeEventListener('touchstart', unlock);
+        };
+        window.addEventListener('click', unlock, { once: true });
+        window.addEventListener('touchstart', unlock, { once: true });
+      }
+
+      playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
+        if (!this.audioCtx) return;
+        try {
+          if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start();
+          osc.stop(this.audioCtx.currentTime + duration);
+        } catch (e) {}
+      }
+
+      startSoftBGM() {
+        if (this.bgmTimer) clearInterval(this.bgmTimer);
+        const melody = [
+          { f: 261.63, d: 0.5 },
+          { f: 329.63, d: 0.5 },
+          { f: 392.00, d: 0.5 },
+          { f: 440.00, d: 0.5 },
+          { f: 523.25, d: 0.6 },
+          { f: 392.00, d: 0.5 }
+        ];
+        let idx = 0;
+        this.bgmTimer = setInterval(() => {
+          if (this.bgmPlaying && this.audioCtx && this.audioCtx.state === 'running') {
+            const note = melody[idx];
+            this.playTone(note.f, 'sine', note.d, 0.025);
+            idx = (idx + 1) % melody.length;
+          }
+        }, 700);
+      }
+
+      toggleBGM() {
+        this.bgmPlaying = !this.bgmPlaying;
+        const icon = document.getElementById('bgmIcon');
+        const text = document.getElementById('bgmText');
+        
+        if (this.bgmPlaying) {
+          if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
+          this.startSoftBGM();
+          icon.innerText = '🎵';
+          if (text) text.innerText = 'Music: ON';
+          this.logMessage('🎵 Background music: <strong>ON</strong>');
+        } else {
+          if (this.bgmTimer) {
+            clearInterval(this.bgmTimer);
+            this.bgmTimer = null;
+          }
+          icon.innerText = '🔇';
+          if (text) text.innerText = 'Music: OFF';
+          this.logMessage('🔇 Background music: <strong>MUTED</strong>');
+        }
+      }
+
+      initCoordinates() {
+        this.tileCoords = [];
+        const cols = 5;
+        const rows = 5;
+        const size = this.canvas.width / cols;
+
+        for (let r = rows - 1; r >= 0; r--) {
+          const isEvenFromBottom = (rows - 1 - r) % 2 === 0;
+          for (let c = 0; c < cols; c++) {
+            const colIndex = isEvenFromBottom ? c : (cols - 1 - c);
+            this.tileCoords.push({
+              x: colIndex * size + size / 2,
+              y: r * size + size / 2,
+              size: size
+            });
+          }
+        }
+      }
+
+      renderCharacterSelectionGrid() {
+        const grid = document.getElementById('characterSelectionGrid');
+        grid.innerHTML = CHARACTERS.map(char => `
+          <div onclick="game.selectTempCharacter('${char.id}')" id="char-card-${char.id}" class="cursor-pointer p-3 rounded-2xl border-2 ${char.id === this.activeCharacter.id ? 'border-yellow-400 bg-emerald-800/80 shadow-lg' : 'border-emerald-700/50 bg-emerald-950/40'} hover:border-teal-300 transition text-center flex flex-col items-center">
+            <div class="w-16 h-16 rounded-xl bg-gradient-to-tr ${char.bgColor} p-1 mb-2 shadow-md">
+              <img src="${char.image}" class="w-full h-full object-contain" alt="${char.name}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${char.name}'" />
+            </div>
+            <h4 class="font-bold text-sm text-yellow-200">${char.name}</h4>
+            <span class="text-[10px] text-emerald-300 font-semibold">${char.badge}</span>
+          </div>
+        `).join('');
+      }
+
+      selectTempCharacter(id) {
+        this.tempSelectedChar = CHARACTERS.find(c => c.id === id);
+        CHARACTERS.forEach(c => {
+          const card = document.getElementById(`char-card-${c.id}`);
+          if (card) {
+            card.className = `cursor-pointer p-3 rounded-2xl border-2 ${c.id === id ? 'border-yellow-400 bg-emerald-800/80 shadow-lg' : 'border-emerald-700/50 bg-emerald-950/40'} hover:border-teal-300 transition text-center flex flex-col items-center`;
+          }
+        });
+      }
+
+      openCharacterSelectionModal() {
+        this.tempSelectedChar = this.activeCharacter;
+        this.renderCharacterSelectionGrid();
+        document.getElementById('characterModal').classList.remove('hidden');
+      }
+
+      confirmCharacterSelection() {
+        if (this.tempSelectedChar) {
+          this.activeCharacter = this.tempSelectedChar;
+          this.characterImg.src = this.activeCharacter.image;
+          this.updatePlayerUI();
+          this.drawBoard();
+          this.logMessage(`✨ Active Hero changed to: <strong>${this.activeCharacter.name}</strong>`);
+        }
+        document.getElementById('characterModal').classList.add('hidden');
+      }
+
+      updatePlayerUI() {
+        document.getElementById('activeAvatarName').innerText = this.activeCharacter.name;
+        document.getElementById('activeAvatarTitle').innerText = this.activeCharacter.title;
+        document.getElementById('activeAvatarImg').src = this.activeCharacter.image;
+        this.characterImg.src = this.activeCharacter.image;
+
+        const box = document.getElementById('activeAvatarBox');
+        box.className = `w-16 h-16 rounded-2xl flex items-center justify-center text-emerald-950 shadow-md bg-gradient-to-tr ${this.activeCharacter.bgColor} overflow-hidden p-1 border-2 border-white/40`;
+
+        document.getElementById('badgeCurrentTile').innerText = `Tile ${this.currentTile}`;
+        document.getElementById('headerScoreDisplay').innerText = `${this.playerScore} Marks`;
+        
+        if (this.attemptedCount === 0) {
+          document.getElementById('correctCounter').innerText = `0 / 0`;
+        } else {
+          const accPct = Math.round((this.solvedCount / this.attemptedCount) * 100);
+          document.getElementById('correctCounter').innerText = `${this.solvedCount} / ${this.attemptedCount} (${accPct}%)`;
+        }
+
+        document.getElementById('rollsCounter').innerText = this.rollsCount;
+      }
+
+      logMessage(msg) {
+        const log = document.getElementById('gameLog');
+        const p = document.createElement('p');
+        p.innerHTML = msg;
+        log.prepend(p);
+      }
+
+      isBonusTile(tileNum) {
+        return [4, 9, 14, 19].includes(tileNum);
+      }
+
+      drawRoundedRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.arcTo(x + width, y, x + width, y + radius, radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+        ctx.lineTo(x + radius, y + height);
+        ctx.arcTo(x, y + height, x, y + height - radius, radius);
+        ctx.lineTo(x, y + radius);
+        ctx.arcTo(x, y, x + radius, y, radius);
+        ctx.closePath();
+      }
+
+      drawBoard() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.tileCoords.forEach((coord, i) => {
+          const tileNumber = i + 1;
+          const isCurrent = tileNumber === this.currentTile;
+          const isBonus = this.isBonusTile(tileNumber);
+          const half = Math.floor(coord.size / 2) - 4;
+          const left = coord.x - half;
+          const top = coord.y - half;
+          const width = coord.size - 8;
+          const height = coord.size - 8;
+
+          // Tile Background
+          if (isCurrent) {
+            ctx.fillStyle = '#047857';
+          } else if (isBonus) {
+            ctx.fillStyle = '#0f766e';
+          } else {
+            ctx.fillStyle = tileNumber % 2 === 0 ? '#064e3b' : '#065f46';
+          }
+
+          this.drawRoundedRect(ctx, left, top, width, height, 10);
+          ctx.fill();
+
+          // Border Outline
+          ctx.lineWidth = isCurrent ? 4 : (isBonus ? 2.5 : 1.5);
+          ctx.strokeStyle = isCurrent ? '#facc15' : (isBonus ? '#2dd4bf' : 'rgba(52, 211, 153, 0.3)');
+          ctx.stroke();
+
+          // Tile Number
+          ctx.fillStyle = isCurrent ? '#fef08a' : (isBonus ? '#99f6e4' : '#a7f3d0');
+          ctx.font = 'bold 15px Nunito, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(`${tileNumber}`, left + 8, top + 20);
+
+          // Tile Icons
+          if (tileNumber === 25) {
+            ctx.font = '24px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏆', coord.x, coord.y + 8);
+          } else if (isBonus) {
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('⭐', left + width - 6, top + 20);
+          } else if (tileNumber % 3 === 0) {
+            ctx.font = '16px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('🌱', left + width - 6, top + 20);
+          }
+        });
+
+        // Draw Player Token
+        const pCoord = this.tileCoords[this.currentTile - 1];
+        if (pCoord) {
+          ctx.save();
+          ctx.shadowColor = '#facc15';
+          ctx.shadowBlur = 18;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(pCoord.x, pCoord.y + 4, 24, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 3.5;
+          ctx.strokeStyle = this.activeCharacter.color;
+          ctx.stroke();
+          ctx.clip();
+
+          if (this.characterImg.complete && this.characterImg.naturalWidth !== 0) {
+            ctx.drawImage(this.characterImg, pCoord.x - 22, pCoord.y - 18, 44, 44);
+          } else {
+            ctx.fillStyle = this.activeCharacter.color;
+            ctx.font = 'bold 18px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.activeCharacter.name[0], pCoord.x, pCoord.y + 10);
+          }
+          ctx.restore();
+        }
+      }
+
+      handleDiceRollClick() {
+        if (this.isMoving) return;
+        this.isMoving = true;
+        this.rollsCount++;
+
+        const diceBtn = document.getElementById('rollDiceBtn');
+        const diceFace = document.getElementById('diceFace');
+        const faceMap = {
+          1: '<i class="fa-solid fa-dice-one"></i>',
+          2: '<i class="fa-solid fa-dice-two"></i>',
+          3: '<i class="fa-solid fa-dice-three"></i>'
+        };
+        const faces = [
+          '<i class="fa-solid fa-dice-one"></i>',
+          '<i class="fa-solid fa-dice-two"></i>',
+          '<i class="fa-solid fa-dice-three"></i>'
+        ];
+
+        diceBtn.classList.add('dice-rolling');
+        this.playTone(420, 'triangle', 0.1);
+
+        let rolls = 0;
+        const interval = setInterval(() => {
+          diceFace.innerHTML = faces[Math.floor(Math.random() * faces.length)];
+          rolls++;
+          if (rolls > 8) {
+            clearInterval(interval);
+            diceBtn.classList.remove('dice-rolling');
+            // Constrain roll to 1-3
+            const rollValue = this.dicePool[Math.floor(Math.random() * this.dicePool.length)];
+            diceFace.innerHTML = faceMap[rollValue] || '<i class="fa-solid fa-dice-two"></i>';
+            this.logMessage(`🎲 Rolled a <strong>${rollValue}</strong>!`);
+            this.movePlayerStepByStep(rollValue);
+          }
+        }, 80);
+      }
+
+      movePlayerStepByStep(steps, isBonusMove = false) {
+        let remaining = steps;
+        const stepInterval = setInterval(() => {
+          if (remaining > 0 && this.currentTile < this.totalTiles) {
+            this.currentTile++;
+            this.playTone(320 + this.currentTile * 18, 'sine', 0.08);
+            this.updatePlayerUI();
+            this.drawBoard();
+            remaining--;
+          } else {
+            clearInterval(stepInterval);
+            this.isMoving = false;
+            if (this.currentTile >= this.totalTiles) {
+              this.showVictoryScreen();
+            } else if (!isBonusMove) {
+              this.triggerTileEvent();
+            }
+          }
+        }, 220);
+      }
+
+      triggerTileEvent() {
+        const q = this.drawNextUniqueQuestion();
+        this.currentActiveQuestion = q;
+        const isBonus = this.isBonusTile(this.currentTile);
+
+        document.getElementById('modalLevelBadge').innerText = isBonus ? '⭐ Bonus Tile Question' : q.levelTitle;
+        document.getElementById('modalMarksBadge').innerText = `+${q.correctMarks} Marks ${isBonus ? '(+1 Step Bonus!)' : ''}`;
+        document.getElementById('modalQuestionTitle').innerText = `${q.id}. ${q.question}`;
+
+        const container = document.getElementById('modalOptionsContainer');
+        container.innerHTML = q.options.map((opt, idx) => `
+          <button onclick="game.handleOptionClicked(${idx})" class="w-full text-left p-3.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-800/90 border border-emerald-600/50 font-semibold text-sm transition text-slate-100">
+            ${opt}
+          </button>
+        `).join('');
+
+        const feedback = document.getElementById('modalFactBox');
+        feedback.className = "p-3 rounded-xl text-xs sm:text-sm font-semibold hidden mb-3";
+        document.getElementById('modalContinueBtn').classList.add('hidden');
+
+        document.getElementById('questionModal').classList.remove('hidden');
+      }
+
+      handleOptionClicked(selectedOptionIndex) {
+        const q = this.currentActiveQuestion;
+        if (!q) return;
+
+        this.attemptedCount++;
+        const isBonus = this.isBonusTile(this.currentTile);
+        const feedback = document.getElementById('modalFactBox');
+        const continueBtn = document.getElementById('modalContinueBtn');
+        const buttons = document.getElementById('modalOptionsContainer').querySelectorAll('button');
+
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (selectedOptionIndex === q.answer) {
+          this.playerScore += q.correctMarks;
+          this.solvedCount++;
+          this.playTone(587.33, 'sine', 0.25);
+          setTimeout(() => this.playTone(880.00, 'sine', 0.3), 120);
+
+          let bonusText = '';
+          if (isBonus && this.currentTile < this.totalTiles) {
+            this.pendingBonusStep = true;
+            bonusText = '<br>⭐ <strong>Bonus Tile! You earned +1 Extra Forward Step!</strong>';
+          }
+
+          feedback.className = "p-3 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-900/90 border border-emerald-400 text-emerald-200 block mb-3";
+          feedback.innerHTML = `🎉 <strong>Correct!</strong> +${q.correctMarks} Marks!${bonusText}<br><span class="mt-1 block text-slate-200">💡 ${q.fact}</span>`;
+          this.logMessage(`✅ Answered Q${q.id} correctly (+${q.correctMarks} marks).`);
+        } else {
+          this.playTone(220, 'sawtooth', 0.25);
+          this.pendingBonusStep = false;
+          feedback.className = "p-3 rounded-xl text-xs sm:text-sm font-semibold bg-amber-950/90 border border-amber-500 text-amber-200 block mb-3";
+          feedback.innerHTML = `💡 <strong>Good Try!</strong> The correct answer was <em>Option ${String.fromCharCode(65 + q.answer)}</em>.<br><span class="mt-1 block text-slate-200">💡 ${q.fact}</span>`;
+          this.logMessage(`❌ Answered Q${q.id} incorrectly.`);
+        }
+
+        this.updatePlayerUI();
+        continueBtn.classList.remove('hidden');
+      }
+
+      closeQuestionModal() {
+        document.getElementById('questionModal').classList.add('hidden');
+        if (this.pendingBonusStep) {
+          this.pendingBonusStep = false;
+          this.logMessage('⭐ Advancing +1 extra step from Bonus Tile!');
+          setTimeout(() => this.movePlayerStepByStep(1, true), 300);
+        }
+      }
+
+      showVictoryScreen() {
+        this.playTone(523.25, 'triangle', 0.2);
+        setTimeout(() => this.playTone(659.25, 'triangle', 0.2), 160);
+        setTimeout(() => this.playTone(783.99, 'triangle', 0.2), 320);
+        setTimeout(() => this.playTone(1046.50, 'triangle', 0.5), 480);
+
+        const confettiBox = document.getElementById('confettiBox');
+        confettiBox.innerHTML = '';
+        const colors = ['#facc15', '#34d399', '#38bdf8', '#f472b6', '#a78bfa'];
+        for (let i = 0; i < 35; i++) {
+          const div = document.createElement('div');
+          div.className = 'confetti-piece';
+          div.style.left = `${Math.random() * 100}%`;
+          div.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          div.style.animationDelay = `${Math.random() * 2}s`;
+          div.style.animationDuration = `${2 + Math.random() * 2}s`;
+          confettiBox.appendChild(div);
+        }
+
+        const totalAttempted = this.attemptedCount > 0 ? this.attemptedCount : 1;
+        const accuracyRate = Math.round((this.solvedCount / totalAttempted) * 100);
+
+        const rankBadge = document.getElementById('vicRankBadge');
+        if (accuracyRate === 100) {
+          rankBadge.innerText = '🌟 Master Eco-Warrior (100% Accuracy)';
+          rankBadge.className = 'inline-block px-3.5 py-1 bg-yellow-400 text-emerald-950 font-black text-xs rounded-full uppercase tracking-wider mb-2 shadow-md';
+        } else if (accuracyRate >= 75) {
+          rankBadge.innerText = '🌿 Senior Eco-Warrior';
+          rankBadge.className = 'inline-block px-3.5 py-1 bg-emerald-400 text-emerald-950 font-black text-xs rounded-full uppercase tracking-wider mb-2 shadow-md';
+        } else {
+          rankBadge.innerText = '🌱 Junior Eco-Warrior';
+          rankBadge.className = 'inline-block px-3.5 py-1 bg-teal-400 text-emerald-950 font-black text-xs rounded-full uppercase tracking-wider mb-2 shadow-md';
+        }
+
+        document.getElementById('vicHero').innerText = this.activeCharacter.name;
+        document.getElementById('vicScore').innerText = `${this.playerScore} Marks`;
+        document.getElementById('vicQuestions').innerText = `${this.solvedCount} / ${totalAttempted} Attempted (${accuracyRate}%)`;
+        document.getElementById('vicRolls').innerText = `${this.rollsCount} Rolls`;
+        document.getElementById('victoryModal').classList.remove('hidden');
+        this.logMessage(`🏆 <strong>Victory!</strong> Completed the quest with ${this.playerScore} Marks (${accuracyRate}% accuracy).`);
+      }
+
+      resetGame() {
+        this.currentTile = 1;
+        this.playerScore = 0;
+        this.solvedCount = 0;
+        this.attemptedCount = 0;
+        this.rollsCount = 0;
+        this.isMoving = false;
+        this.pendingBonusStep = false;
+        this.currentActiveQuestion = null;
+        this.initQuestionDeck();
+        document.getElementById('victoryModal').classList.add('hidden');
+        this.updatePlayerUI();
+        this.drawBoard();
+        if (this.bgmPlaying && !this.bgmTimer) {
+          this.startSoftBGM();
+        }
+        this.logMessage('🔄 Game reset! Ready for another quest.');
+      }
+
+      openRulesModal() {
+        document.getElementById('rulesModal').classList.remove('hidden');
+      }
+
+      closeRulesModal() {
+        document.getElementById('rulesModal').classList.add('hidden');
+      }
+    }
+
+    const game = new EcoBoardGame();
+  </script>
+</body>
+</html>
